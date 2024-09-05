@@ -16,7 +16,7 @@ app.use(express.json())
 const {expressjwt: jwt} = require('express-jwt')
 const config = require('./config')
 
-const whitelist = [/^\/product\/([^\/]*)$/, /product/, /^\/article\/([^\/]*)$/, /article/, /login/, /register/, /^\/admin\/login$/, /album/, /^\/album\/([^\/]*)$/ ]
+const whitelist = [/^\/product\/([^\/]*)$/, /product/, /^\/article\/([^\/]*)$/, /article/, /login/, /register/, /^\/admin\/login$/, /album/, /^\/album\/([^\/]*)$/, /design/, /^\/design\/([^\/]*)$/ ]
 app.use(jwt({secret: config.jwtSecretKey,algorithms: ["HS256"]}).unless({path:whitelist}))
 
 //導入路由
