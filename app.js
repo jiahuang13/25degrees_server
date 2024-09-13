@@ -1,6 +1,21 @@
 const express = require('express')
 const app = express()
 const joi = require('joi')
+const redisClient = require('./redis-client');
+
+// 在 app.js 中直接使用 redisClient
+app.set('redisClient', redisClient);
+// 你可以在其他中間件、路由中訪問 Redis 客戶端
+app.get('/test-redis', (req, res) => {
+  const client = req.app.get('redisClient');
+  client.set('test', 'This is a test value', redis.print);
+  client.get('test', (err, reply) => {
+    if (err) {
+      return res.status(500).send('Redis error');
+    }
+    res.send(`Value from Redis: ${reply}`);
+  });
+});
 
 //導入並配置跨域中間件
 const cors = require('cors')
@@ -59,6 +74,8 @@ else {
 }
 })
 
+const port = process.env.PORT || 0
+
 app.listen(3007,()=>{
-  console.log('server is running at port 3007');
+  console.log(`server is running at port ${port}`);
 })

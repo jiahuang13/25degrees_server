@@ -6,10 +6,12 @@ const userHandler = require('../router_handler/user')
 
 //導入驗證數據的中間件
 const expressJoi = require('@escook/express-joi')
-const { register_login_schema, update_userInfo_schema } = require('../schema/user')
+const { register_login_schema, update_userInfo_schema, verificationCode_schema } = require('../schema/user')
 
 //註冊
 router.post('/register', expressJoi(register_login_schema), userHandler.register)
+//驗證碼
+router.post('/verificationCode', expressJoi(verificationCode_schema), userHandler.verificationCode)
 //登入
 router.post('/login', expressJoi(register_login_schema), userHandler.login)
 

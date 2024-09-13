@@ -7,11 +7,19 @@ const id = joi.number().integer().min(1).required()
 const nickname = joi.string()
 const email = joi.string().email().required()
 const avatar = joi.string().dataUri()
+const verificationCode = joi.string().length(6).pattern(/^\d+$/).required()
 
 //驗證規則對象：註冊和登錄表單
 exports.register_login_schema = {
   body: {
-    username, password
+    username, password, email
+  }
+}
+
+// 驗證碼
+exports.verificationCode_schema = {
+  body: {
+    verificationCode
   }
 }
 
