@@ -10,7 +10,7 @@ exports.getAllProduct = (req,res) => {
     }
     if(results.length === 0){ 
       return res.send({ status:1, message: '獲取所有商品失敗'}) }
-    res.send({ status:0, message:'獲取所有商品成功', data:results })
+    res.send({ status: 200, message:'獲取所有商品成功', data:results })
   })
 }
 
@@ -39,7 +39,7 @@ exports.addNewProduct = (req,res) => {
     if(results.affectedRows !== 1) {
       return res.send({status:1, message:'新增商品失敗，請再試一次'})
     }
-    res.send({status:0, message:'新增商品成功'})
+    res.send({status: 200, message:'新增商品成功'})
   })
 }
 
@@ -54,7 +54,7 @@ exports.updateProduct = (req,res) => {
       if(results.affectedRows !== 1){
       return res.send({status:1, message:'更新商品失敗'})
       }
-      res.send({status:0, message:'更新商品成功'})
+      res.send({status: 200, message:'更新商品成功'})
   })
 }
 
@@ -69,6 +69,6 @@ exports.deleteProduct = (req,res) => {
       if(results.affectedRows !== 1){
       return res.send({status:1, message:'刪除商品失敗'})
       }
-      res.send({status:0, message:'刪除商品成功'})
+      res.send({status: 200, message:'刪除商品成功'})
   })
 }

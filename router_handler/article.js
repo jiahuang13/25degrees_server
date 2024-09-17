@@ -15,7 +15,7 @@ exports.addArticle = (req,res) => {
     if(results.affectedRows !== 1) {
       return res.send({status:1, message:'新增失敗，請再試一次'})
     }
-    res.send({status:0, message:'新增成功'})
+    res.send({status: 200, message:'新增成功'})
   })
 }
 
@@ -28,7 +28,7 @@ db.query(sql,(err,results) => {
   }
   if(results.length === 0){ 
     return res.send({ status:1, message: '獲取所有文章失敗'}) }
-  res.send({ status:0, message:'獲取所有文章成功', data:results })
+  res.send({ status: 200, message:'獲取所有文章成功', data:results })
 })
 }
 
@@ -58,7 +58,7 @@ exports.deleteArticle = (req,res) => {
     if(results.affectedRows !== 1){
     return res.send({status:1, message:'刪除文章失敗'})
     }
-    res.send({status:0, message:'刪除文章成功'})
+    res.send({status: 200, message:'刪除文章成功'})
   })
 }
 
@@ -73,6 +73,6 @@ exports.updateArticle = (req,res) => {
       if(results.affectedRows !== 1){
       return res.send({status:1, message:'更新文章失敗'})
       }
-      res.send({status:0, message:'更新文章成功'})
+      res.send({status: 200, message:'更新文章成功'})
   })
 }

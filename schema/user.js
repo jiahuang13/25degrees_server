@@ -9,17 +9,24 @@ const email = joi.string().email().required()
 const avatar = joi.string().dataUri()
 const verificationCode = joi.string().length(6).pattern(/^\d+$/).required()
 
-//驗證規則對象：註冊和登錄表單
-exports.register_login_schema = {
+//驗證規則對象：註冊表單
+exports.register_schema = {
   body: {
     username, password, email
+  }
+}
+
+// 登入表單
+exports.login_schema = {
+  body: {
+    username, password
   }
 }
 
 // 驗證碼
 exports.verificationCode_schema = {
   body: {
-    verificationCode
+    email, verificationCode
   }
 }
 

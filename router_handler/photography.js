@@ -8,7 +8,7 @@ exports.getAllAlbum = (req,res) => {
     }
     if(results.length === 0){ 
       return res.send({ status:1, message: '獲取所有相簿失敗'}) }
-    res.send({ status:0, message:'獲取所有相簿成功', data:results })
+    res.send({ status: 200, message:'獲取所有相簿成功', data:results })
   })
 }
 
@@ -35,6 +35,6 @@ exports.getAllDesign = (req,res) => {
     if(results.length === 0){
       return res.send({status:1, message:"獲取所有設計失敗"})
     }
-    res.send({status:0, message:"獲取所有設計成功", data:results})
+    res.send({status: 200, message:"獲取所有設計成功", data:results})
   })
 }

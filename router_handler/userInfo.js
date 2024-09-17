@@ -16,7 +16,7 @@ exports.getUserInfo = (req,res)=>{
     if(results.length !== 1){ return res.send({ status:1, message:'獲取用戶信息失敗' }) }
     
     res.send({
-      status: 0,
+      status: 200,
       message: '獲取用戶信息成功',
       data: results[0]
     }) 
@@ -33,7 +33,7 @@ exports.updateUserInfo = (req,res)=>{
       // console.log(results);
       if(results.affectedRows !== 1){return res.send({ status:1, message:'更新用戶信息失敗' })}
       res.send({
-        status: 0, message: '更新用戶信息成功'
+        status: 200, message: '更新用戶信息成功'
       })
     })
   }
@@ -54,7 +54,7 @@ exports.updatePwd = (req,res) => {
     db.query(sql, [bcryptNewPwd, req.auth.id], (err,results)=>{
       if(err){ return res.send({ status:1, message:err.message }) }
       if(results.affectedRows !== 1){ return res.send({ status:1, message:'更新密碼失敗' }) }
-      res.send({ status:0, message:'更新密碼成功' })
+      res.send({ status: 200, message:'更新密碼成功' })
     })
   })
 }
@@ -65,6 +65,6 @@ exports.updateAvatar = (req,res) => {
   db.query(sql,[req.body.avatar, req.auth.id], (err,results)=>{
     if(err){ return res.send({ status:1, message:err.message }) }
     if(results.affectedRows !== 1){ return res.send({ status:1, message:'更新頭像失敗' }) }
-    res.send({ status:0, message: '更新頭像成功' })
+    res.send({ status: 200, message: '更新頭像成功' })
   })
 }

@@ -31,7 +31,7 @@ app.use(express.json())
 const {expressjwt: jwt} = require('express-jwt')
 const config = require('./config')
 
-const whitelist = [/^\/product\/([^\/]*)$/, /product/, /^\/article\/([^\/]*)$/, /article/, /login/, /register/, /^\/admin\/login$/, /album/, /^\/album\/([^\/]*)$/, /design/, /^\/design\/([^\/]*)$/ ]
+const whitelist = [/^\/product\/([^\/]*)$/, /product/, /^\/article\/([^\/]*)$/, /article/, /tryyy/, /login/, /register/, /verificationCode/, /^\/admin\/login$/, /album/, /^\/album\/([^\/]*)$/, /design/, /^\/design\/([^\/]*)$/ ]
 app.use(jwt({secret: config.jwtSecretKey,algorithms: ["HS256"]}).unless({path:whitelist}))
 
 //導入路由
@@ -74,8 +74,8 @@ else {
 }
 })
 
-const port = process.env.PORT || 0
+const port = process.env.PORT || 3008
 
-app.listen(3007,()=>{
+app.listen(port,()=>{
   console.log(`server is running at port ${port}`);
 })
