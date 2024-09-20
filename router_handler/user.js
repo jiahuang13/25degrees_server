@@ -20,17 +20,6 @@ const transporter = nodemailer.createTransport({
 exports.register = async (req, res) => {
   const userInfo = req.body;
 
-  // 非空判斷
-  if (!userInfo.username || !userInfo.password || !userInfo.email) {
-    return res.send({ status: 1, message: "帳號、密碼或電子郵件不能為空" });
-  }
-
-  // 簡單的 email 格式驗證
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(userInfo.email)) {
-    return res.send({ status: 1, message: "請提供有效的電子郵件地址" });
-  }
-
   try {
     // 檢查電子郵件是否被佔用
     const emailResults = await new Promise((resolve, reject) => {
