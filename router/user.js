@@ -14,9 +14,6 @@ const {
   verificationCode_schema,
 } = require("../schema/user");
 
-//調試用
-// router.get("/tryyy", redisClient.tryyy);
-
 //註冊
 router.post("/register", expressJoi(register_schema), userHandler.register);
 //驗證碼
@@ -31,19 +28,18 @@ router.post("/login", expressJoi(login_schema), userHandler.login);
 // ---------- 後台管理 ---------------
 // 查
 router.get("/user/all", userHandler.getAllUser);
-router.get("/user", userHandler.getOneUser);
-// 增(同註冊)
+router.get("/user/search", userHandler.searchUser)
+router.get("/user/:id", userHandler.getUserById);
+router.get("/user", userHandler.getThisUser);
+
 // 刪
 router.delete("/user/:id", userHandler.deleteUser);
 // 改
 router.patch(
-  "/user/:id",
+  "/user",
   expressJoi(update_userInfo_schema),
   userHandler.updateUser
 );
-
-//後台登入
-router.post("/admin/login", userHandler.adminLogin);
 
 //將路由對象共享出去
 module.exports = router;

@@ -170,27 +170,28 @@ exports.login = (req, res) => {
 };
 
 // 後台登入
-exports.adminLogin = (req, res) => {
-  const sql = "SELECT * FROM adminUser WHERE username=?";
-  db.query(sql, req.body.username, (err, results) => {
-    if (err) return res.send({ status: 1, message: err.message });
-    if (results.length !== 1)
-      return res.send({ status: 1, message: "登入失敗" });
-    if (req.body.password !== results[0].password)
-      return res.send({ status: 1, message: "帳號或密碼錯誤" });
+// exports.adminLogin = (req, res) => {
+//   const sql = "SELECT * FROM adminUser WHERE username=?";
+//   db.query(sql, req.body.username, (err, results) => {
+//     if (err) return res.send({ status: 1, message: err.message });
+//     if (results.length !== 1)
+//       return res.send({ status: 1, message: "登入失敗" });
+//     if (req.body.password !== results[0].password)
+//       return res.send({ status: 1, message: "帳號或密碼錯誤" });
 
-    const tokenStr = jwt.sign(
-      { username: req.body.username },
-      config.jwtSecretKey,
-      { expiresIn: config.expiresIn }
-    );
-    res.send({ status: 200, message: "登入成功", token: tokenStr });
-  });
-};
+//     const tokenStr = jwt.sign(
+//       { username: req.body.username },
+//       config.jwtSecretKey,
+//       { expiresIn: config.expiresIn }
+//     );
+//     res.send({ status: 200, message: "登入成功", token: tokenStr });
+//   });
+// };
 
 // 獲取所有會員
 exports.getAllUser = (req, res) => {
-  const sql = "SELECT * FROM user ORDER BY id DESC";
+  const sql =
+    "SELECT id, username, email, role, created_at FROM user ORDER BY id DESC";
   db.query(sql, (err, results) => {
     if (err) return res.send({ status: 1, message: err.message });
     if (results.length === 0)
@@ -199,27 +200,43 @@ exports.getAllUser = (req, res) => {
   });
 };
 
-// 獲取單筆會員
-exports.getOneUser = (req, res) => {
-  const sql = "SELECT * FROM user WHERE id=?";
+// 獲取會員本人
+exports.getThisUser = (req, res) => {
+  const sql =
+    "SELECT id, username, email, role, created_at FROM user WHERE id=?";
   const id = req.auth.id;
   db.query(sql, id, (err, results) => {
     if (err) return res.send({ status: 1, message: err.message });
     if (results.length !== 1)
-      return res.send({ status: 1, message: "獲取單筆會員失敗" });
-    res.send({ status: 200, message: "獲取單筆會員成功", data: results[0] });
+      return res.send({ status: 1, message: "獲取會員本人失敗" });
+    res.send({ status: 200, message: "獲取會員本人成功", data: results[0] });
+  });
+};
+
+// 獲取會員 透過 id
+exports.getUserById = (req, res) => {
+  const sql = "SELECT id, username, email, role FROM user WHERE id=?";
+  const id = req.params.id;
+  db.query(sql, id, (err, results) => {
+    if (err) return res.send({ status: 1, message: err.message });
+    if (results.length !== 1)
+      return res.send({ status: 1, message: `獲取會員 ${id} 失敗` });
+    res.send({ status: 200, message: `獲取會員 ${id} 成功`, data: results[0] });
   });
 };
 
 // 更新會員
 exports.updateUser = (req, res) => {
-  const sql = "UPDATE user SET ? WHERE id=?";
-  const id = req.params.id;
-  db.query(sql, [req.body, id], (err, results) => {
+  console.log(req.body);
+
+  const { id, username, email, role } = req.body;
+
+  const sql = "UPDATE user SET username = ?, email = ?, role = ? WHERE id=?";
+  db.query(sql, [username, email, role, id], (err, results) => {
     if (err) return res.send({ status: 1, message: err.message });
     if (results.affectedRows !== 1)
-      return res.send({ status: 1, message: "更新會員失敗" });
-    res.send({ status: 200, message: "更新會員成功" });
+      return res.send({ status: 1, message: `更新會員 ${id} 失敗` });
+    res.send({ status: 200, message: `更新會員 ${id} 成功` });
   });
 };
 
@@ -230,7 +247,40 @@ exports.deleteUser = (req, res) => {
   db.query(sql, id, (err, results) => {
     if (err) return res.send({ status: 1, message: err.message });
     if (results.affectedRows !== 1)
-      return res.send({ status: 1, message: "刪除會員失敗" });
-    res.send({ status: 200, message: "刪除會員成功" });
+      return res.send({ status: 1, message: `刪除會員 ${id} 失敗` });
+    res.send({ status: 200, message: `刪除會員 ${id} 成功` });
   });
+};
+
+// 搜尋會員
+exports.searchUser = async (req, res) => {
+  let sql = "SELECT id, username, email, role, created_at FROM user WHERE 1=1";
+  const params = [];
+
+  if (req.query.username) {
+    sql += " AND username LIKE ?";
+    params.push(`%${req.query.username}%`);
+  }
+  if (req.query.email) {
+    sql += " AND email LIKE ?";
+    params.push(`%${req.query.email}%`);
+  }
+  if (req.query.role) {
+    sql += " AND role = ?";
+    params.push(req.query.role);
+  }
+  try {
+    const results = await db.query(sql, params);
+    if (results.length < 1) {
+      return res.status(200).json({ message: "沒有匹配結果", data: [] });
+    } else {
+      // console.log(results);
+      return res
+        .status(200)
+        .json({ message: `搜尋結果共${results.length}筆`, data: results });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: err.message });
+  }
 };

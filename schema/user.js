@@ -1,7 +1,7 @@
 const joi = require("joi");
 
 //定義用戶名和密碼的驗證規則
-const username = joi.string().alphanum().min(5).max(10).required();
+const username = joi.string().alphanum().min(5).max(20).required();
 const password = joi
   .string()
   .pattern(/^[\S]{5,20}$/)
@@ -21,6 +21,7 @@ const recipient_name = joi.string().max(255).required();
 const is_default = joi.number().valid(0, 1).required();
 const city = joi.string().min(6).max(10).required();
 const address_detail = joi.string().min(2).max(255).required();
+const role = joi.number().integer().min(0).required();
 
 //驗證規則對象：註冊表單
 exports.register_schema = {
@@ -50,12 +51,11 @@ exports.verificationCode_schema = {
 //驗證規則對象：更新用戶信息
 exports.update_userInfo_schema = {
   body: {
+    id,
     username,
     email,
+    role,
     //是nickname:nickname, email:email 的簡寫
-  },
-  params: {
-    id,
   },
 };
 

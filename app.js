@@ -16,16 +16,11 @@ app.use(express.json());
 const { expressjwt: jwt } = require("express-jwt");
 const config = require("./config");
 
-require("dotenv").config();
-// paypal支付
-const paymentRoutes = require("./router/payment");
-app.use(paymentRoutes);
-
 const whitelist = [
   /^\/product\/([^\/]*)$/,
   /product/,
-  /^\/article\/([^\/]*)$/,
-  /article/,
+  /^\/blog\/([^\/]*)$/,
+  /blog/,
   /login/,
   /register/,
   /verificationCode/,
@@ -48,14 +43,22 @@ app.use(userRouter);
 const userInfoRouter = require("./router/userInfo");
 app.use(userInfoRouter);
 
-const articleRouter = require("./router/article");
-app.use(articleRouter);
+const blogRouter = require("./router/blog");
+app.use(blogRouter);
 
 const productRouter = require("./router/product");
 app.use(productRouter);
 
 const photoRouter = require("./router/photography");
 app.use(photoRouter);
+
+require("dotenv").config();
+// paypal支付
+const paymentRoutes = require("./router/payment");
+app.use(paymentRoutes);
+
+const orderRoutes = require("./router/order");
+app.use(orderRoutes);
 
 //定義錯誤錯誤級別中間件
 app.use((err, req, res, next) => {
@@ -73,9 +76,12 @@ app.use((err, req, res, next) => {
       message: "身份認證失敗",
     });
   } else {
+    console.log(err);
+
     return res.send({
       status: 1,
-      message: "未知錯誤",
+      message: "未知錯誤，請聯絡管理員",
+      err: err.message,
     });
   }
 });
