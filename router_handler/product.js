@@ -1,102 +1,106 @@
-//導入數據庫模塊
 const db = require("../db/index");
+// 統一響應函數
+const { successRes, errorRes } = require("../utils/response_handler");
 
-// 獲取所有商品
-exports.getAllProduct = (req, res) => {
+// 獲取所有商品（依 ID 降序排列）
+exports.getAllProduct = async (req, res) => {
   const sql = "SELECT * FROM product ORDER BY id DESC";
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+  try {
+    const [results] = await db.query(sql);
     if (results.length === 0) {
-      return res.send({ status: 1, message: "獲取所有商品失敗" });
+      return errorRes(res, "獲取所有商品失敗", 404);
     }
+    // 模擬延遲回應，方便前端測試 loading 動畫效果
     setTimeout(() => {
-      res.send({ status: 200, message: "獲取所有商品成功", data: results });
+      successRes(res, "獲取所有商品成功", results);
     }, 1000);
-  });
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-// 獲取所有商品 隨機
-exports.getAllProductRand = (req, res) => {
+// 獲取所有商品（隨機排序）
+exports.getAllProductRand = async (req, res) => {
   const sql = "SELECT * FROM product ORDER BY RAND()";
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+  try {
+    const [results] = await db.query(sql);
     if (results.length === 0) {
-      return res.send({ status: 1, message: "隨機獲取所有商品失敗" });
+      return errorRes(res, "隨機獲取所有商品失敗", 404);
     }
-    res.send({ status: 200, message: "隨機獲取所有商品成功", data: results });
-  });
+    return successRes(res, "隨機獲取所有商品成功", results);
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-// 獲取單項商品
-exports.getOneProduct = (req, res) => {
-  const sql = "SELECT * FROM product WHERE id=?";
+// 獲取單項商品（根據 ID）
+exports.getOneProduct = async (req, res) => {
+  const sql = "SELECT * FROM product WHERE id = ?";
   const id = req.params.id;
-  db.query(sql, id, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+
+  try {
+    const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return res.send({ status: 1, message: "獲取單項商品失敗" });
+      return errorRes(res, `無法獲取 ID 為 ${id} 的商品`, 404);
     }
-    res.send({ status: 1, message: "獲取單項商品成功", data: results[0] });
-  });
+    return successRes(res, "獲取單項商品成功", results[0]);
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
 // 新增商品
-exports.addNewProduct = (req, res) => {
+exports.addNewProduct = async (req, res) => {
   const sql = "INSERT INTO product SET ?";
-  db.query(sql, req.body, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+  try {
+    const [results] = await db.query(sql, req.body);
     if (results.affectedRows !== 1) {
-      return res.send({ status: 1, message: "新增商品失敗，請再試一次" });
+      return errorRes(res, "新增商品失敗，請再試一次");
     }
-    res.send({ status: 200, message: "新增商品成功" });
-  });
+    return successRes(res, "新增商品成功");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-// 更新商品
-exports.updateProduct = (req, res) => {
-  // console.log(req.body);
-
-  const sql = "UPDATE product SET ? WHERE id=?";
+// 更新商品（根據 ID）
+exports.updateProduct = async (req, res) => {
+  const sql = "UPDATE product SET ? WHERE id = ?";
   const id = req.body.id;
-  db.query(sql, [req.body, id], (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+
+  try {
+    const [results] = await db.query(sql, [req.body, id]);
     if (results.affectedRows !== 1) {
-      return res.send({ status: 1, message: "更新商品失敗" });
+      return errorRes(res, `無法更新 ID 為 ${id} 的商品`);
     }
-    res.send({ status: 200, message: "更新商品成功" });
-  });
+    return successRes(res, "更新商品成功");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-// 刪除商品
-exports.deleteProduct = (req, res) => {
-  const sql = "DELETE FROM product WHERE id=?";
+// 刪除商品（根據 ID）
+exports.deleteProduct = async (req, res) => {
+  const sql = "DELETE FROM product WHERE id = ?";
   const id = req.params.id;
-  db.query(sql, id, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+
+  try {
+    const [results] = await db.query(sql, [id]);
     if (results.affectedRows !== 1) {
-      return res.send({ status: 1, message: "刪除商品失敗" });
+      return errorRes(res, `無法刪除 ID 為 ${id} 的商品`);
     }
-    res.send({ status: 200, message: "刪除商品成功" });
-  });
+    return successRes(res, "刪除商品成功");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-// 搜尋商品
+// 搜尋商品（根據條件：名稱、內容、類別）
 exports.searchProduct = async (req, res) => {
   let sql = "SELECT * FROM product WHERE 1=1";
   const params = [];
 
+  // 動態拼接 SQL 語句
   if (req.query.name) {
     sql += " AND name LIKE ?";
     params.push(`%${req.query.name}%`);
@@ -109,18 +113,14 @@ exports.searchProduct = async (req, res) => {
     sql += " AND category = ?";
     params.push(req.query.category);
   }
+
   try {
-    const results = await db.query(sql, params);
-    if (results.length < 1) {
-      return res.status(200).json({ message: "沒有匹配結果", data: [] });
-    } else {
-      // console.log(results);
-      return res
-        .status(200)
-        .json({ message: `搜尋結果共${results.length}筆`, data: results });
+    const [results] = await db.query(sql, params);
+    if (results.length === 0) {
+      return successRes(res, "沒有匹配結果", []);
     }
+    return successRes(res, `搜尋結果共 ${results.length} 筆`, results);
   } catch (err) {
-    console.log(err);
-    return res.status(500).json({ message: err.message });
+    return errorRes(res, err.message);
   }
 };

@@ -1,40 +1,53 @@
-const db = require('../db/index')
+// 引入數據庫模塊
+const db = require("../db/index");
+// 引入統一響應函數
+const { successRes, errorRes } = require("../utils/response_handler");
 
-exports.getAllAlbum = (req,res) => {
-  const sql = 'SELECT * FROM photo_album'
-  db.query(sql, (err,results) => {
-    if(err){
-      return res.send({status:1, message:err.message})
-    }
-    if(results.length === 0){ 
-      return res.send({ status:1, message: '獲取所有相簿失敗'}) }
-    res.send({ status: 200, message:'獲取所有相簿成功', data:results })
-  })
-}
+// 獲取所有相簿
+exports.getAllAlbum = async (req, res) => {
+  const sql = "SELECT * FROM photo_album";
 
-exports.getOneAlbum = (req,res) => {
-  const sql = 'SELECT * FROM photo WHERE album_id=?'
-  db.query(sql, req.params.id, (err,results) => {
-    if(err){
-      return res.send({status:1, message:err.message})
-      }
-      console.log(results);
-      if(results.length === 0){
-      return res.send({status:1, message:'獲取單一相簿失敗'})
-      }
-      res.send({status:1, message:'獲取單一相簿成功', data:results})
-  })
-}
+  try {
+    const [results] = await db.query(sql);
+    if (results.length === 0) {
+      return errorRes(res, "無法獲取所有相簿，資料為空", 404);
+    }
+    return successRes(res, "獲取所有相簿成功", results);
+  } catch (err) {
+    console.error(err);
+    return errorRes(res, err.message);
+  }
+};
 
-exports.getAllDesign = (req,res) => {
-  const sql = 'SELECT * FROM design'
-  db.query(sql, (err,results) => {
-    if(err){
-      return res.send({status:1, message:err.message})
+// 獲取單一相簿
+exports.getOneAlbum = async (req, res) => {
+  const sql = "SELECT * FROM photo WHERE album_id=?";
+  const albumId = req.params.id;
+
+  try {
+    const [results] = await db.query(sql, [albumId]);
+    if (results.length === 0) {
+      return errorRes(res, `無法獲取相簿 ID: ${albumId}`, 404);
     }
-    if(results.length === 0){
-      return res.send({status:1, message:"獲取所有設計失敗"})
+    return successRes(res, "獲取單一相簿成功", results);
+  } catch (err) {
+    console.error(err);
+    return errorRes(res, err.message);
+  }
+};
+
+// 獲取所有設計
+exports.getAllDesign = async (req, res) => {
+  const sql = "SELECT * FROM design";
+
+  try {
+    const [results] = await db.query(sql);
+    if (results.length === 0) {
+      return errorRes(res, "無法獲取所有設計，資料為空", 404);
     }
-    res.send({status: 200, message:"獲取所有設計成功", data:results})
-  })
-}
+    return successRes(res, "獲取所有設計成功", results);
+  } catch (err) {
+    console.error(err);
+    return errorRes(res, err.message);
+  }
+};

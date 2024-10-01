@@ -1,209 +1,170 @@
 const db = require("../db/index");
 const bcrypt = require("bcryptjs");
+// 統一響應函數
+const {
+  successRes,
+  errorRes,
+} = require("../utils/response_handler");
 
-//獲取用戶信息的處理函數
-exports.getUserInfo = (req, res) => {
-  //為防止密碼洩漏 排除 password 字段
-  const sql =
-    "SELECT id, username, nickname, email, avatar FROM user WHERE id=?";
-  //expressJWT會將token解析出的
-  const id = req.params.id | req.auth.id;
+// -------------------- 用戶信息操作 ---------------------
 
-  db.query(sql, [id], (err, results) => {
-    //執行sql語句的錯誤
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
-    //
+// 獲取用戶信息
+exports.getUserInfo = async (req, res) => {
+  const sql = "SELECT id, username, nickname, email, avatar FROM user WHERE id=?";
+  const id = req.params.id || req.auth.id;
+
+  try {
+    const results = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return res.send({ status: 1, message: "獲取用戶信息失敗" });
+      return errorRes(res, "獲取用戶信息失敗", 404);
     }
-
-    res.send({
-      status: 200,
-      message: "獲取用戶信息成功",
-      data: results[0],
-    });
-  });
+    return successRes(res, "獲取用戶信息成功", results[0]);
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-//更新用戶信息的處理函數
-exports.updateUserInfo = (req, res) => {
-  //sql語句
+// 更新用戶信息
+exports.updateUserInfo = async (req, res) => {
   const sql = "UPDATE user SET ? WHERE id=?";
-
-  db.query(sql, [req.body, req.auth.id], (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
-    // console.log(results);
+  try {
+    const results = await db.query(sql, [req.body, req.auth.id]);
     if (results.affectedRows !== 1) {
-      return res.send({ status: 1, message: "更新用戶信息失敗" });
+      return errorRes(res, "更新用戶信息失敗");
     }
-    res.send({
-      status: 200,
-      message: "更新用戶信息成功",
-    });
-  });
+    return successRes(res, "更新用戶信息成功");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-//重置密碼的處理函數
-exports.updatePwd = (req, res) => {
-  //根據id查詢用戶是否存在
-  const sql = "SELECT * FROM user WHERE id=?";
-  db.query(sql, [req.auth.id], (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+// 重置密碼
+exports.updatePwd = async (req, res) => {
+  try {
+    const sql = "SELECT * FROM user WHERE id=?";
+    const results = await db.query(sql, [req.auth.id]);
+
     if (results.length !== 1) {
-      return res.send({ status: 1, message: "用戶不存在" });
+      return errorRes(res, "用戶不存在", 404);
     }
-    //判斷提交的舊密碼是否正確 調用bcrypt.compareSync(提交的密碼, 數據庫中的密碼) 比對是否相同
-    const compareResult = bcrypt.compareSync(
-      req.body.oldPwd,
-      results[0].password
-    );
+
+    const compareResult = bcrypt.compareSync(req.body.oldPwd, results[0].password);
     if (!compareResult) {
-      return res.send({ status: 1, message: "舊密碼錯誤" });
+      return errorRes(res, "舊密碼錯誤");
     }
-    //調用bcrypt.hashSync()對新密碼進行加密(可只傳需加密的明文，第二個參數鹽可省略) 更新到數據庫
+
     const bcryptNewPwd = bcrypt.hashSync(req.body.newPwd);
-    const sql = "UPDATE user SET password=? WHERE id=?";
-    db.query(sql, [bcryptNewPwd, req.auth.id], (err, results) => {
-      if (err) {
-        return res.send({ status: 1, message: err.message });
-      }
-      if (results.affectedRows !== 1) {
-        return res.send({ status: 1, message: "更新密碼失敗" });
-      }
-      res.send({ status: 200, message: "更新密碼成功" });
-    });
-  });
+    const updateSql = "UPDATE user SET password=? WHERE id=?";
+    const updateResults = await db.query(updateSql, [bcryptNewPwd, req.auth.id]);
+
+    if (updateResults.affectedRows !== 1) {
+      return errorRes(res, "更新密碼失敗");
+    }
+    return successRes(res, "更新密碼成功");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-//更新頭像的處理函數
-exports.updateAvatar = (req, res) => {
+// 更新用戶頭像
+exports.updateAvatar = async (req, res) => {
   const sql = "UPDATE user SET avatar=? WHERE id=?";
-  db.query(sql, [req.body.avatar, req.auth.id], (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+  try {
+    const results = await db.query(sql, [req.body.avatar, req.auth.id]);
     if (results.affectedRows !== 1) {
-      return res.send({ status: 1, message: "更新頭像失敗" });
+      return errorRes(res, "更新頭像失敗");
     }
-    res.send({ status: 200, message: "更新頭像成功" });
-  });
+    return successRes(res, "更新頭像成功");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-// -------------------- 地址 ---------------------
+// -------------------- 地址操作 -------------------------
+
 // 獲取所有地址
-exports.getAddressList = (req, res) => {
-  // console.log(req.auth.id);
-  const user_id = req.auth.id;
-
+exports.getAddressList = async (req, res) => {
   const sql = "SELECT * FROM addresses WHERE user_id=?";
-  db.query(sql, user_id, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
+  try {
+    const results = await db.query(sql, [req.auth.id]);
+    if (results.length === 0) {
+      return errorRes(res, "獲取所有地址失敗", 404);
     }
-    if (results.length === 0)
-      return res.send({ status: 1, message: "獲取所有地址失敗" });
-    else {
-      res.send({ status: 200, message: "獲取所有地址成功", data: results });
-    }
-  });
+    return successRes(res, "獲取所有地址成功", results);
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
-// 依據 id 獲取單一地址
-exports.getAddressOne = (req, res) => {
-  // console.log(req.params.id);
-  const id = req.params.id;
+// 依據 ID 獲取單一地址
+exports.getAddressOne = async (req, res) => {
   const sql = "SELECT * FROM addresses WHERE id=?";
-  db.query(sql, id, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+  try {
+    const results = await db.query(sql, [req.params.id]);
     if (results.length !== 1) {
-      console.log(results);
-      return res.send({ status: 1, message: "獲取地址失敗" });
-    } else {
-      res.send({ status: 200, message: "獲取地址成功", data: results });
+      return errorRes(res, "獲取地址失敗", 404);
     }
-  });
+    return successRes(res, "獲取地址成功", results[0]);
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
 // 獲取預設地址
-exports.getDefaultAddress = (req, res) => {
+exports.getDefaultAddress = async (req, res) => {
   const sql = "SELECT * FROM addresses WHERE user_id =? AND is_default = 1";
-  db.query(sql, req.auth.id, (err, results) => {
-    if (err) {
-      return res.send({ status: 1, message: err.message });
-    }
+  try {
+    const results = await db.query(sql, [req.auth.id]);
     if (results.length !== 1) {
-      console.log(results);
-      return res.send({ status: 1, message: "獲取地址失敗" });
-    } else {
-      res.send({ status: 200, message: "獲取地址成功", data: results });
+      return errorRes(res, "獲取預設地址失敗", 404);
     }
-  });
+    return successRes(res, "獲取預設地址成功", results[0]);
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
 };
 
 // 更新地址
 exports.updateAddress = async (req, res) => {
-  // console.log(req.body, req.params.id);
-  const id = req.params.id;
+  const { id } = req.params;
   const data = req.body;
 
   try {
-    // 若本地址為預設，其他預設改0
     if (data.is_default === 1) {
-      const defaultSql =
-        "UPDATE addresses SET is_default = 0 WHERE user_id = ?";
-      const defaultResults = await db.query(defaultSql, [req.auth.id]);
-      if (defaultResults.affectedRows === 0) {
-        return res.send({ status: 1, message: "沒有其他地址為預設，不須更新" });
-      }
+      const resetSql = "UPDATE addresses SET is_default = 0 WHERE user_id = ?";
+      await db.query(resetSql, [req.auth.id]);
     }
-    //  執行更新邏輯
+
     const updateSql = "UPDATE addresses SET ? WHERE id = ?";
     const updateResults = await db.query(updateSql, [data, id]);
+
     if (updateResults.affectedRows !== 1) {
-      return res.send({ status: 1, message: "更新失敗，請稍後再試" });
+      return errorRes(res, "更新地址失敗");
     }
-    return res.send({
-      status: 200,
-      message: "更新地址成功",
-    });
+    return successRes(res, "更新地址成功");
   } catch (err) {
-    return res.send({ status: 1, message: err.message });
+    return errorRes(res, err.message);
   }
 };
 
-// 新增地址（ 收貨人姓名、手機、地址（城市、詳細）、預設與否，user_id 透過 req.auth 取得 ）
+// 新增地址
 exports.addAddress = async (req, res) => {
   const data = { ...req.body, user_id: req.auth.id };
-  console.log(data);
 
   try {
-    // 若本地址為預設，其他預設改0
     if (data.is_default === 1) {
-      const updateSql = "UPDATE addresses SET is_default = 0 WHERE user_id = ?";
-      const updateResults = await db.query(updateSql, [req.auth.id]);
-      if (updateResults.affectedRows === 0) {
-        return res.send({ status: 1, message: "沒有其他地址為預設，不須更新" });
-      }
+      const resetSql = "UPDATE addresses SET is_default = 0 WHERE user_id = ?";
+      await db.query(resetSql, [req.auth.id]);
     }
-    //插入地址
+
     const insertSql = "INSERT INTO addresses SET ?";
-    const insertResults = await db.query(insertSql, data);
-    if (results.affectedRows !== 1) {
-      return res.send({ status: 1, message: "新增失敗，請稍後再試" });
+    const insertResults = await db.query(insertSql, [data]);
+
+    if (insertResults.affectedRows !== 1) {
+      return errorRes(res, "新增地址失敗");
     }
-    return res.send({
-      status: 200,
-      message: "新增地址成功",
-    });
+    return successRes(res, "新增地址成功");
   } catch (err) {
-    return res.send({ status: 1, message: err.message });
+    return errorRes(res, err.message);
   }
 };
