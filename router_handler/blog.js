@@ -1,7 +1,6 @@
 //導入數據庫模塊
 const db = require("../db/index");
 
-// 處理函數
 // 新增文章
 exports.addBlog = (req, res) => {
   // 接收文章對象

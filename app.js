@@ -60,6 +60,10 @@ app.use(paymentRoutes);
 const orderRoutes = require("./router/order");
 app.use(orderRoutes);
 
+// 定時任務
+const orderStatusCheck = require("./schedule");
+orderStatusCheck;
+
 //定義錯誤錯誤級別中間件
 app.use((err, req, res, next) => {
   //驗證失敗導致的錯誤

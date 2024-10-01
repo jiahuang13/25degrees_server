@@ -1,4 +1,6 @@
 const db = require("../db/index");
+const jwt = require("jsonwebtoken");
+const config = require("../config");
 
 // 創建訂單
 exports.createOrder = async (req, res) => {
@@ -42,7 +44,12 @@ exports.createOrder = async (req, res) => {
         return res.send({ status: 1, message: "生成訂單詳情失敗" });
       }
     });
-    res.json({ status: 200, message: "Order created", orderId: orderId });
+
+    res.json({
+      status: 200,
+      message: "Order created",
+      orderId: orderId,
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ error: err.message });
@@ -105,7 +112,6 @@ exports.getAllOrdersById = async (req, res) => {
       const sortedOrders = Object.values(ordersAggregation).sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
-      
 
       res.send({
         status: 200,
@@ -129,7 +135,7 @@ exports.getOneOrderById = async (req, res) => {
     const sql = "SELECT * FROM orders WHERE id = ?";
     const results = await db.query(sql, orderId);
     if (results.length !== 1) {
-      console.log("錯誤:", results);
+      console.log("獲取單筆訂單錯誤:", results);
 
       return res.send({ status: 1, message: "獲取單筆訂單失敗" });
     } else {
@@ -137,5 +143,47 @@ exports.getOneOrderById = async (req, res) => {
     }
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+};
+
+// 獲取訂單各狀態的數量
+exports.getOrderStatusCount = async (req, res) => {
+  const userId = req.auth.id; // 假設從 Token 中獲取用戶 ID
+
+  try {
+    const sql = `
+      SELECT status, COUNT(*) as count
+      FROM orders
+      WHERE user_id = ?
+      GROUP BY status`;
+
+    const results = await db.query(sql, [userId]);
+
+    // 構造結果物件
+    const orderCount = {
+      pending: 0,
+      paid: 0,
+      shipped: 0,
+      refunded: 0,
+    };
+
+    // 遍歷結果，填充訂單狀態數量
+    results.forEach((item) => {
+      if (orderCount[item.status] !== undefined) {
+        orderCount[item.status] = item.count;
+      }
+    });
+
+    res.send({
+      status: 200,
+      message: "獲取訂單狀態數量成功",
+      data: orderCount,
+    });
+  } catch (err) {
+    console.error("獲取訂單狀態數量失敗", err);
+    res.send({
+      status: 500,
+      message: "獲取訂單狀態數量失敗",
+    });
   }
 };

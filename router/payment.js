@@ -43,23 +43,23 @@ router.post("/paypal/verify-order", async (req, res) => {
       .json({ success: false, message: "缺少必要的订单标识信息" });
   }
 
-  const request = new checkoutNodeJssdk.orders.OrdersCaptureRequest(paypalId);
-  request.requestBody({});
-
   try {
+    const request = new checkoutNodeJssdk.orders.OrdersCaptureRequest(paypalId);
+    request.requestBody({});
+
     const orderDetails = await client().execute(request);
     // res.json({ status: "success", orderDetails });
     console.log(orderDetails.result.status);
 
     if (orderDetails && orderDetails.result.status === "COMPLETED") {
-      const updateSql =
+      const paypalSql =
         "UPDATE orders SET status = ?, paypal_txn_id = ? WHERE id = ?";
-      const updateResults = await db.query(updateSql, [
+      const paypalResults = await db.query(paypalSql, [
         "paid",
         paypalId,
         orderId,
       ]);
-      if (updateResults.affectedRows !== 1) {
+      if (paypalResults.affectedRows !== 1) {
         return res.send({ status: 500, message: "更新訂單狀態失敗" });
       } else {
         return res.send({ status: 200, message: "更新訂單狀態成功" });

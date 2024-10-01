@@ -152,41 +152,24 @@ exports.login = (req, res) => {
   const sqlStr = "SELECT * FROM user WHERE username=?";
   db.query(sqlStr, [userInfo.username], (err, results) => {
     if (err) return res.send({ status: 1, message: err.message });
-    if (results.length !== 1)
+    if (results.length !== 1) {
       return res.send({ status: 1, message: "帳號或密碼錯誤" });
+    }
     const compareResult = bcrypt.compareSync(
       userInfo.password,
       results[0].password
     );
-    if (!compareResult)
+    if (!compareResult) {
       return res.send({ status: 1, message: "帳號或密碼錯誤" });
+    }
 
-    const user = { ...results[0], password: "", avatar: "" };
+    const user = { ...results[0], password: "" };
     const tokenStr = jwt.sign(user, config.jwtSecretKey, {
       expiresIn: config.expiresIn,
     });
     res.send({ status: 200, message: "登入成功", token: tokenStr });
   });
 };
-
-// 後台登入
-// exports.adminLogin = (req, res) => {
-//   const sql = "SELECT * FROM adminUser WHERE username=?";
-//   db.query(sql, req.body.username, (err, results) => {
-//     if (err) return res.send({ status: 1, message: err.message });
-//     if (results.length !== 1)
-//       return res.send({ status: 1, message: "登入失敗" });
-//     if (req.body.password !== results[0].password)
-//       return res.send({ status: 1, message: "帳號或密碼錯誤" });
-
-//     const tokenStr = jwt.sign(
-//       { username: req.body.username },
-//       config.jwtSecretKey,
-//       { expiresIn: config.expiresIn }
-//     );
-//     res.send({ status: 200, message: "登入成功", token: tokenStr });
-//   });
-// };
 
 // 獲取所有會員
 exports.getAllUser = (req, res) => {
