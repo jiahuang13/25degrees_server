@@ -11,7 +11,7 @@ const {
   address_schema,
 } = require("../schema/user");
 
-//獲取用戶信息的路由
+//取得用戶信息的路由
 router.get("/userinfo/:id", userInfoHandler.getUserInfo);
 
 //更新用戶信息的路由
@@ -35,22 +35,5 @@ router.post(
   userInfoHandler.updateAvatar
 );
 
-// ----------- 地址 ---------------
-//新增
-router.post(
-  "/addAddress",
-  expressJoi(address_schema),
-  userInfoHandler.addAddress
-);
-//獲取
-router.get("/addressList", userInfoHandler.getAddressList);
-router.get("/address/:id", userInfoHandler.getAddressOne);
-router.get("/addressDefault", userInfoHandler.getDefaultAddress);
-//更新
-router.patch(
-  "/address/:id",
-  expressJoi(address_schema),
-  userInfoHandler.updateAddress
-);
 
 module.exports = router;

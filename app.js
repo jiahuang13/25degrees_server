@@ -43,6 +43,9 @@ app.use(userRouter);
 const userInfoRouter = require("./router/userInfo");
 app.use(userInfoRouter);
 
+const addressRouter = require("./router/address");
+app.use(addressRouter);
+
 const blogRouter = require("./router/blog");
 app.use(blogRouter);
 

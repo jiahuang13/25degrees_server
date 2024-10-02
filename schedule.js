@@ -10,10 +10,10 @@ const orderStatusCheck = schedule.scheduleJob("*/5 * * * *", async () => {
     // 更新 `pending` 狀態且創建時間超過 2 小時的訂單為 `failed`
     const sql = `
       UPDATE orders 
-      SET status = 'cancelled' 
+      SET status = 'canceled' 
       WHERE status = 'pending' AND created_at < ?`;
 
-    const results = await db.query(sql, [twoHoursAgo]);
+    const [results] = await db.query(sql, [twoHoursAgo]);
 
     if (results.affectedRows > 0) {
       console.log(`Marked ${results.affectedRows} orders as cancelled.`);

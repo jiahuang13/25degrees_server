@@ -2,38 +2,38 @@ const db = require("../db/index");
 // 統一響應函數
 const { successRes, errorRes } = require("../utils/response_handler");
 
-// 獲取所有商品（依 ID 降序排列）
+// 取得所有商品（依 ID 降序排列）
 exports.getAllProduct = async (req, res) => {
-  const sql = "SELECT * FROM product ORDER BY id DESC";
+  const sql = "SELECT * FROM product WHERE visible != 0 ORDER BY id DESC";
   try {
     const [results] = await db.query(sql);
     if (results.length === 0) {
-      return errorRes(res, "獲取所有商品失敗", 404);
+      return errorRes(res, "取得所有商品失敗", 404);
     }
     // 模擬延遲回應，方便前端測試 loading 動畫效果
     setTimeout(() => {
-      successRes(res, "獲取所有商品成功", results);
+      successRes(res, "取得所有商品成功", results);
     }, 1000);
   } catch (err) {
     return errorRes(res, err.message);
   }
 };
 
-// 獲取所有商品（隨機排序）
+// 取得所有商品（隨機排序）
 exports.getAllProductRand = async (req, res) => {
-  const sql = "SELECT * FROM product ORDER BY RAND()";
+  const sql = "SELECT * FROM product WHERE visible != 0 ORDER BY RAND()";
   try {
     const [results] = await db.query(sql);
     if (results.length === 0) {
-      return errorRes(res, "隨機獲取所有商品失敗", 404);
+      return errorRes(res, "隨機取得所有商品失敗", 404);
     }
-    return successRes(res, "隨機獲取所有商品成功", results);
+    return successRes(res, "隨機取得所有商品成功", results);
   } catch (err) {
     return errorRes(res, err.message);
   }
 };
 
-// 獲取單項商品（根據 ID）
+// 取得單項商品（根據 ID）
 exports.getOneProduct = async (req, res) => {
   const sql = "SELECT * FROM product WHERE id = ?";
   const id = req.params.id;
@@ -41,9 +41,9 @@ exports.getOneProduct = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return errorRes(res, `無法獲取 ID 為 ${id} 的商品`, 404);
+      return errorRes(res, `無法取得 ID 為 ${id} 的商品`, 404);
     }
-    return successRes(res, "獲取單項商品成功", results[0]);
+    return successRes(res, "取得單項商品成功", results[0]);
   } catch (err) {
     return errorRes(res, err.message);
   }

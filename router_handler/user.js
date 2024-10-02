@@ -61,7 +61,7 @@ exports.register = async (req, res) => {
     // 發送郵件
     await transporter.sendMail(mailOptions);
 
-    return successRes(res, "請至信箱獲取驗證碼");
+    return successRes(res, "請至信箱取得驗證碼");
   } catch (err) {
     return errorRes(res, err.message);
   }
@@ -72,10 +72,10 @@ exports.verificationCode = async (req, res) => {
   const { email, verificationCode } = req.body;
 
   try {
-    // 從 Redis 獲取驗證碼及用戶資訊
+    // 從 Redis 取得驗證碼及用戶資訊
     const jsonData = await client.get(email);
     if (!jsonData) {
-      return errorRes(res, "驗證碼已過期或無效");
+      return errorRes(res, "驗證碼已過期或無效，請重新註冊");
     }
 
     const {
@@ -125,7 +125,7 @@ exports.login = async (req, res) => {
     }
 
     // 簽發 JWT Token
-    const user = { ...results[0], password: "" };
+    const user = { ...results[0], password: "", email: "", created_at: "" }; // 取 id, username, role 生成 token
     const tokenStr = jwt.sign(user, config.jwtSecretKey, {
       expiresIn: config.expiresIn,
     });
@@ -135,22 +135,22 @@ exports.login = async (req, res) => {
   }
 };
 
-// 獲取所有會員
+// 取得所有會員
 exports.getAllUser = async (req, res) => {
   const sql =
     "SELECT id, username, email, role, created_at FROM user ORDER BY id DESC";
   try {
     const [results] = await db.query(sql);
     if (results.length === 0) {
-      return errorRes(res, "獲取所有會員失敗", 404);
+      return errorRes(res, "取得所有會員失敗", 404);
     }
-    return successRes(res, "獲取所有會員成功", results);
+    return successRes(res, "取得所有會員成功", results);
   } catch (err) {
     return errorRes(res, err.message);
   }
 };
 
-// 獲取會員本人
+// 取得會員本人
 exports.getThisUser = async (req, res) => {
   const sql =
     "SELECT id, username, email, role, created_at FROM user WHERE id = ?";
@@ -158,25 +158,25 @@ exports.getThisUser = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return errorRes(res, "獲取會員本人失敗", 404);
+      return errorRes(res, "取得會員本人失敗", 404);
     }
-    return successRes(res, "獲取會員本人成功", results[0]);
+    return successRes(res, "取得會員本人成功", results[0]);
   } catch (err) {
     return errorRes(res, err.message);
   }
 };
 
-// 獲取會員 透過 id
+// 取得會員 透過 id
 exports.getUserById = async (req, res) => {
   const sql = "SELECT id, username, email, role FROM user WHERE id=?";
   const id = req.params.id;
 
   try {
-    const results = await db.query(sql, [id]);
+    const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return errorRes(res, `獲取會員 ${id} 失敗`, 404);
+      return errorRes(res, `取得會員 ${id} 失敗`, 404);
     }
-    return successRes(res, `獲取會員 ${id} 成功`, results[0]);
+    return successRes(res, `取得會員 ${id} 成功`, results[0]);
   } catch (err) {
     return errorRes(res, err.message);
   }

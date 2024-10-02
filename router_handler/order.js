@@ -1,9 +1,6 @@
 // 引入數據庫模塊
 const db = require("../db/index");
-const {
-  successRes,
-  errorRes,
-} = require("../utils/response_handler");
+const { successRes, errorRes } = require("../utils/response_handler");
 
 // 創建訂單
 exports.createOrder = async (req, res) => {
@@ -52,7 +49,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// 獲取該會員所有訂單
+// 取得該會員所有訂單
 exports.getAllOrdersById = async (req, res) => {
   const userId = req.auth.id;
   try {
@@ -77,7 +74,7 @@ exports.getAllOrdersById = async (req, res) => {
     const [results] = await db.query(sql, [userId]);
 
     if (results.length === 0) {
-      return errorRes(res, `無法獲取會員ID: ${userId} 的所有訂單`, 404);
+      return successRes(res, `會員ID: ${userId} 目前沒有訂單`, []);
     }
 
     // 聚合訂單數據
@@ -103,14 +100,18 @@ exports.getAllOrdersById = async (req, res) => {
     }, {});
 
     // 返回排序後的訂單資料
-    return successRes(res, `會員ID: ${userId} 的所有訂單獲取成功`, Object.values(ordersAggregation));
+    return successRes(
+      res,
+      `會員ID: ${userId} 的所有訂單取得成功`,
+      Object.values(ordersAggregation)
+    );
   } catch (err) {
     console.error(err);
     return errorRes(res, err.message);
   }
 };
 
-// 獲取會員的一筆訂單
+// 取得會員的一筆訂單
 exports.getOneOrderById = async (req, res) => {
   const orderId = req.params.id;
 
@@ -119,17 +120,17 @@ exports.getOneOrderById = async (req, res) => {
     const [results] = await db.query(sql, [orderId]);
 
     if (results.length !== 1) {
-      return errorRes(res, "無法獲取指定訂單", 404);
+      return errorRes(res, "無法取得指定訂單", 404);
     }
 
-    return successRes(res, "單筆訂單獲取成功", results[0]);
+    return successRes(res, "單筆訂單取得成功", results[0]);
   } catch (err) {
     console.error(err);
     return errorRes(res, err.message);
   }
 };
 
-// 獲取訂單各狀態的數量
+// 取得訂單各狀態的數量
 exports.getOrderStatusCount = async (req, res) => {
   const userId = req.auth.id;
 
@@ -157,9 +158,9 @@ exports.getOrderStatusCount = async (req, res) => {
       }
     });
 
-    return successRes(res, "訂單狀態數量獲取成功", orderCount);
+    return successRes(res, "訂單狀態數量取得成功", orderCount);
   } catch (err) {
     console.error(err);
-    return errorRes(res, "訂單狀態數量獲取失敗");
+    return errorRes(res, "訂單狀態數量取得失敗");
   }
 };

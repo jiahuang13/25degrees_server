@@ -59,25 +59,23 @@ router.post("/paypal/verify-order", async (req, res) => {
     // 檢查訂單是否捕獲完成
     if (orderDetails && orderDetails.result.status === "COMPLETED") {
       // 1. 更新資料庫訂單狀態
-      const paypalSql =
-        "UPDATE orders SET status = ?, paypal_txn_id = ? WHERE id = ?";
-      const paypalResults = await db.query(paypalSql, [
-        "paid",
-        paypalId,
-        orderId,
-      ]);
+      const paypalSql = "UPDATE orders SET status = ?, paypal_txn_id = ? WHERE id = ?";
+      const [paypalResults] = await db.query(paypalSql, ["paid", paypalId, orderId]);
+      
       if (paypalResults.affectedRows !== 1) {
         return errorRes(res, "更新訂單狀態失敗", 500);
       }
 
-      // 2. 更新庫存
+      // 2. 調用 `updateStock` 函數來更新庫存
       const stockResult = await updateStock(orderId);
+
+      // 根據 `updateStock` 的返回值進行響應處理
       if (stockResult.status !== 200) {
-        return errorRes(res, stockResult.message, 500);
+        return errorRes(res, stockResult.message, stockResult.status);
       }
 
-      // 3.返回成功響應
-      return successRes(res, "訂單支付成功，訂單狀態已更新");
+      // 3. 返回成功響應
+      return successRes(res, "訂單支付成功，訂單狀態及庫存已更新");
     } else if (!orderDetails) {
       // 捕獲訂單失敗
       return errorRes(res, "驗證訂單失敗", 500);
@@ -89,7 +87,7 @@ router.post("/paypal/verify-order", async (req, res) => {
     console.error("PayPal 訂單捕獲失敗:", err);
 
     // 捕獲異常並返回錯誤響應
-    return errorRes(res, "訂單捕獲失敗", err.message, 500);
+    return errorRes(res, "訂單捕獲失敗", 500);
   }
 });
 

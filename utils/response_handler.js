@@ -1,16 +1,14 @@
 function successRes(res, message = "操作成功", data = null) {
-  return res.json({
-    status: 200,
-    message,
-    data,
-  });
+  const response = { message };
+  if (data !== null) {
+    response.data = data;
+  }
+  return res.status(200).json(response);
 }
 
 function errorRes(res, message = "操作失敗", statusCode = 500) {
   return res.status(statusCode).json({
-    status: statusCode,
     message,
-    error,
   });
 }
 
