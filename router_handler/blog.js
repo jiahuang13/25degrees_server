@@ -1,5 +1,5 @@
 const db = require("../db/index");
-const { successRes, errorRes } = require("../utils/response_handler");
+const { successRes, errorRes } = require("../utils/response");
 
 // 新增文章
 exports.addBlog = async (req, res) => {
@@ -8,11 +8,11 @@ exports.addBlog = async (req, res) => {
   try {
     const [results] = await db.query(sql, [blog]); // 使用解構從返回的數組中取出結果
     if (results.affectedRows !== 1) {
-      return errorRes(res, "新增失敗，請再試一次");
+      return errorRes("新增失敗，請再試一次");
     }
-    return successRes(res, "新增成功");
+    return successRes("新增成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -22,11 +22,11 @@ exports.getAllBlog = async (req, res) => {
   try {
     const [results] = await db.query(sql);
     if (results.length === 0) {
-      return successRes(res, "目前沒有文章", []);
+      return successRes("目前沒有文章", []);
     }
-    return successRes(res, "取得所有文章成功", results);
+    return successRes("取得所有文章成功", results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -37,11 +37,11 @@ exports.getOneBlog = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return errorRes(res, "取得單篇文章失敗", 404);
+      return errorRes("取得單篇文章失敗", 404);
     }
-    return successRes(res, "取得單篇文章成功", results[0]);
+    return successRes("取得單篇文章成功", results[0]);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -52,11 +52,11 @@ exports.deleteBlog = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.affectedRows !== 1) {
-      return errorRes(res, "刪除文章失敗");
+      return errorRes("刪除文章失敗");
     }
-    return successRes(res, "刪除文章成功");
+    return successRes("刪除文章成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -67,11 +67,11 @@ exports.updateBlog = async (req, res) => {
   try {
     const [results] = await db.query(sql, [req.body, id]);
     if (results.affectedRows !== 1) {
-      return errorRes(res, "更新文章失敗");
+      return errorRes("更新文章失敗");
     }
-    return successRes(res, "更新文章成功");
+    return successRes("更新文章成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -92,11 +92,11 @@ exports.searchBlog = async (req, res) => {
   try {
     const [results] = await db.query(sql, params);
     if (results.length < 1) {
-      return successRes(res, "沒有匹配結果", []);
+      return successRes("沒有匹配結果", []);
     }
-    return successRes(res, `搜尋結果共 ${results.length} 筆`, results);
+    return successRes(`搜尋結果共 ${results.length} 筆`, results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -107,10 +107,10 @@ exports.getThreeRandBlog = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.length < 1) {
-      return errorRes(res, "取得 3 篇隨機文章失敗", 404);
+      return errorRes("取得 3 篇隨機文章失敗", 404);
     }
-    return successRes(res, "取得 3 篇隨機文章成功", results);
+    return successRes("取得 3 篇隨機文章成功", results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };

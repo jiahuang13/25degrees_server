@@ -1,5 +1,5 @@
 const db = require("../db/index");
-const { successRes, errorRes } = require("../utils/response_handler");
+const { successRes, errorRes } = require("../utils/response");
 
 // items(id, count, price), totalprice
 // 創建訂單
@@ -25,7 +25,7 @@ exports.createOrder = async (req, res) => {
     ]);
 
     if (orderResults.affectedRows !== 1) {
-      return errorRes(res, "生成訂單主記錄失敗");
+      return errorRes("生成訂單主記錄失敗");
     }
 
     // 插入訂單詳細記錄
@@ -39,17 +39,17 @@ exports.createOrder = async (req, res) => {
     ]);
     const [itemResults] = await db.query(itemSql, [orderItemsData]); // 插入多筆資料使用批量插入
     if (itemResults.affectedRows !== finalList.length) {
-      return errorRes(res, "生成訂單詳細記錄失敗");
+      return errorRes("生成訂單詳細記錄失敗");
     }
 
-    return successRes(res, "訂單創建成功", { orderId });
+    return successRes("訂單創建成功", { orderId });
   } catch (err) {
     console.error(err);
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
-// 取得該會員所有訂單
+// 查看該會員所有訂單
 exports.getAllOrdersById = async (req, res) => {
   const userId = req.auth.id;
   try {
@@ -74,7 +74,7 @@ exports.getAllOrdersById = async (req, res) => {
     const [results] = await db.query(sql, [userId]);
 
     if (results.length === 0) {
-      return successRes(res, `會員ID: ${userId} 目前沒有訂單`, []);
+      return successRes(`會員ID: ${userId} 目前沒有訂單`, []);
     }
 
     // 聚合訂單數據
@@ -101,17 +101,16 @@ exports.getAllOrdersById = async (req, res) => {
 
     // 返回排序後的訂單資料
     return successRes(
-      res,
-      `會員ID: ${userId} 的所有訂單取得成功`,
+      `會員ID: ${userId} 的所有訂單查看成功`,
       Object.values(ordersAggregation)
     );
   } catch (err) {
     console.error(err);
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
-// 取得會員的一筆訂單
+// 查看會員的一筆訂單
 exports.getOneOrderById = async (req, res) => {
   const orderId = req.params.id;
 
@@ -120,17 +119,17 @@ exports.getOneOrderById = async (req, res) => {
     const [results] = await db.query(sql, [orderId]);
 
     if (results.length !== 1) {
-      return errorRes(res, "無法取得指定訂單", 404);
+      return errorRes("無法查看指定訂單", 404);
     }
 
-    return successRes(res, "單筆訂單取得成功", results[0]);
+    return successRes("單筆訂單查看成功", results[0]);
   } catch (err) {
     console.error(err);
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
-// 取得訂單各狀態的數量
+// 查看訂單各狀態的數量
 exports.getOrderStatusCount = async (req, res) => {
   const userId = req.auth.id;
 
@@ -158,9 +157,9 @@ exports.getOrderStatusCount = async (req, res) => {
       }
     });
 
-    return successRes(res, "訂單狀態數量取得成功", orderCount);
+    return successRes("訂單狀態數量查看成功", orderCount);
   } catch (err) {
     console.error(err);
-    return errorRes(res, "訂單狀態數量取得失敗");
+    return errorRes("訂單狀態數量查看失敗");
   }
 };

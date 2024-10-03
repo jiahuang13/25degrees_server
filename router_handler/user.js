@@ -5,7 +5,7 @@ const config = require("../config");
 const nodemailer = require("nodemailer");
 const client = require("../redis-client");
 // 統一響應函數
-const { successRes, errorRes } = require("../utils/response_handler");
+const { successRes, errorRes } = require("../utils/response");
 
 // 配置 Nodemailer 來發送郵件
 const transporter = nodemailer.createTransport({
@@ -26,7 +26,7 @@ exports.register = async (req, res) => {
       email,
     ]);
     if (emailResults.length > 0) {
-      return errorRes(res, "該信箱已被使用", 400);
+      return errorRes("該信箱已被使用", 400);
     }
 
     // 檢查帳號是否被使用
@@ -35,17 +35,17 @@ exports.register = async (req, res) => {
       [username]
     );
     if (usernameResults.length > 0) {
-      return errorRes(res, "該帳號已被使用", 400);
+      return errorRes("該帳號已被使用", 400);
     }
 
     // 生成驗證碼
     const vCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 儲存驗證碼與用戶資訊到 Redis
+    // 儲存驗證碼與用戶資訊到 Redis，設定 10 分鐘後過期
     await client.set(
       email,
       JSON.stringify({ username, email, password, vCode }),
-      { EX: 300 }
+      { EX: 600 }
     );
 
     // 設定郵件內容
@@ -59,9 +59,9 @@ exports.register = async (req, res) => {
     // 發送郵件
     await transporter.sendMail(mailOptions);
 
-    return successRes(res, "請至信箱取得驗證碼");
+    return successRes("請至信箱取得驗證碼");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -73,14 +73,14 @@ exports.vCodeRegister = async (req, res) => {
     // 從 Redis 取得驗證碼及用戶資訊
     const jsonData = await client.get(email);
     if (!jsonData) {
-      return errorRes(res, "驗證碼已過期或無效，請重新註冊");
+      return errorRes("驗證碼已過期或無效，請重新註冊");
     }
 
     const { username, password, vCode: savedCode } = JSON.parse(jsonData);
 
     // 驗證驗證碼是否正確
     if (savedCode !== vCode) {
-      return errorRes(res, "驗證碼不正確", 400);
+      return errorRes("驗證碼不正確", 400);
     }
 
     // 密碼加密後寫入數據庫
@@ -89,14 +89,14 @@ exports.vCodeRegister = async (req, res) => {
     const [results] = await db.query(sql, [username, email, hashedPassword]);
 
     if (results.affectedRows !== 1) {
-      return errorRes(res, "註冊失敗，請稍後再試");
+      return errorRes("註冊失敗，請稍後再試");
     }
 
     // 註冊成功後刪除 Redis 中的驗證碼
     await client.del(email);
-    return successRes(res, "註冊成功，跳轉登入頁面");
+    return successRes("註冊成功，跳轉登入頁面");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -109,13 +109,13 @@ exports.login = async (req, res) => {
     const [results] = await db.query(sql, [username]);
 
     if (results.length !== 1) {
-      return errorRes(res, "帳號或密碼錯誤", 404);
+      return errorRes("帳號或密碼錯誤", 404);
     }
 
     // 驗證密碼是否正確
     const isValid = bcrypt.compareSync(password, results[0].password);
     if (!isValid) {
-      return errorRes(res, "帳號或密碼錯誤");
+      return errorRes("帳號或密碼錯誤");
     }
 
     // 簽發 JWT Token
@@ -123,9 +123,9 @@ exports.login = async (req, res) => {
     const tokenStr = jwt.sign(user, config.jwtSecretKey, {
       expiresIn: config.expiresIn,
     });
-    return successRes(res, "登入成功", { token: tokenStr });
+    return successRes("登入成功", { token: tokenStr });
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -139,27 +139,27 @@ exports.forgotPassword = async (req, res) => {
       email,
     ]);
     if (results.length === 0) {
-      return errorRes(res, "該信箱未註冊", 404);
+      return errorRes("該信箱未註冊", 404);
     }
 
     // 生成重置驗證碼
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 儲存驗證碼到 Redis，有效期 5 分鐘
-    await client.set(email, resetCode, { EX: 3000 });
+    // 儲存驗證碼到 Redis，有效期 10 分鐘
+    await client.set(email, resetCode, { EX: 600 });
 
     // 發送郵件通知
     const mailOptions = {
       from: "jiahuang0513@gmail.com",
       to: email,
       subject: "25 degrees 密碼重置",
-      text: `您的密碼重置驗證碼是：${resetCode}，請在 5 分鐘內使用`,
+      text: `您的密碼重置驗證碼是：${resetCode}，請在 10 分鐘內使用`,
     };
 
     await transporter.sendMail(mailOptions);
-    return successRes(res, "驗證碼已發送到您的信箱");
+    return successRes("驗證碼已發送到您的信箱");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -172,20 +172,20 @@ exports.vCodeForgotPwd = async (req, res) => {
     const savedCode = await client.get(email);
 
     if (!savedCode) {
-      return errorRes(res, "驗證碼已過期或無效，請重新請求重置密碼", 400);
+      return errorRes("驗證碼已過期或無效，請重新請求重置密碼", 400);
     }
 
     // 驗證碼是否正確
     if (savedCode !== vCode) {
-      return errorRes(res, "驗證碼不正確", 400);
+      return errorRes("驗證碼不正確", 400);
     }
 
     // 驗證通過後，設置 Redis 中的標記來允許重置密碼
-    await client.set(`reset_allowed_${email}`, 1, { EX: 3000 }); // 允許 5 分鐘內重設密碼
+    await client.set(`reset_allowed_${email}`, 1, { EX: 300 }); // 允許 5 分鐘內重設密碼
 
-    return successRes(res, "驗證碼正確，請設置新密碼");
+    return successRes("驗證碼正確，請設置新密碼");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -197,7 +197,7 @@ exports.resetPassword = async (req, res) => {
     // 檢查是否已通過驗證
     const resetAllowed = await client.get(`reset_allowed_${email}`);
     if (!resetAllowed) {
-      return errorRes(res, "無效或已過期的請求，請重新進行驗證", 400);
+      return errorRes("無效或已過期的請求，請重新進行驗證", 400);
     }
 
     // 將新密碼加密後更新到數據庫
@@ -206,15 +206,15 @@ exports.resetPassword = async (req, res) => {
     const [results] = await db.query(sql, [hashedPassword, email]);
 
     if (results.affectedRows !== 1) {
-      return errorRes(res, "重置密碼失敗，請稍後再試");
+      return errorRes("重置密碼失敗，請稍後再試");
     }
 
     // 重設密碼成功後刪除 Redis 中的標記
     await client.del(`reset_allowed_${email}`);
 
-    return successRes(res, "密碼重設成功，請重新登入");
+    return successRes("密碼重設成功，請重新登入");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -225,11 +225,11 @@ exports.getAllUser = async (req, res) => {
   try {
     const [results] = await db.query(sql);
     if (results.length === 0) {
-      return errorRes(res, "取得所有會員失敗", 404);
+      return errorRes("取得所有會員失敗", 404);
     }
-    return successRes(res, "取得所有會員成功", results);
+    return successRes("取得所有會員成功", results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -241,11 +241,11 @@ exports.getThisUser = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return errorRes(res, "取得會員本人失敗", 404);
+      return errorRes("取得會員本人失敗", 404);
     }
-    return successRes(res, "取得會員本人成功", results[0]);
+    return successRes("取得會員本人成功", results[0]);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -257,11 +257,11 @@ exports.getUserById = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return errorRes(res, `取得會員 ${id} 失敗`, 404);
+      return errorRes(`取得會員 ${id} 失敗`, 404);
     }
-    return successRes(res, `取得會員 ${id} 成功`, results[0]);
+    return successRes(`取得會員 ${id} 成功`, results[0]);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -273,11 +273,11 @@ exports.updateUser = async (req, res) => {
   try {
     const [results] = await db.query(sql, [username, email, role, id]);
     if (results.affectedRows !== 1) {
-      return errorRes(res, `更新會員 ${id} 失敗`);
+      return errorRes(`更新會員 ${id} 失敗`);
     }
-    return successRes(res, `更新會員 ${id} 成功`);
+    return successRes(`更新會員 ${id} 成功`);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -289,11 +289,11 @@ exports.deleteUser = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.affectedRows !== 1) {
-      return errorRes(res, `刪除會員 ${id} 失敗`);
+      return errorRes(`刪除會員 ${id} 失敗`);
     }
-    return successRes(res, `刪除會員 ${id} 成功`);
+    return successRes(`刪除會員 ${id} 成功`);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -318,10 +318,10 @@ exports.searchUser = async (req, res) => {
   try {
     const [results] = await db.query(sql, params);
     if (results.length === 0) {
-      return successRes(res, "沒有匹配結果", []);
+      return successRes("沒有匹配結果", []);
     }
-    return successRes(res, `搜尋結果共 ${results.length} 筆`, results);
+    return successRes(`搜尋結果共 ${results.length} 筆`, results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };

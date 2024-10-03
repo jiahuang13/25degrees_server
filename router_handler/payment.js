@@ -1,9 +1,8 @@
 const { client } = require("../paypal");
 const checkoutNodeJssdk = require("@paypal/checkout-server-sdk");
 const db = require("../db/index");
-const { successRes, errorRes } = require("../utils/response_handler");
+const { successRes, errorRes } = require("../utils/response");
 const updateStock = require("../updateStock"); // 引入更新庫存模塊
-
 
 // 創建 PayPal 訂單
 exports.paypalCreateOrder = async (req, res) => {
@@ -29,12 +28,12 @@ exports.paypalCreateOrder = async (req, res) => {
     const order = await client().execute(request);
 
     // 成功響應，返回訂單 ID
-    return successRes(res, "PayPal 訂單創建成功", { id: order.result.id });
+    return successRes("PayPal 訂單創建成功", { id: order.result.id });
   } catch (err) {
     console.error("PayPal 訂單創建失敗:", err);
 
     // 捕獲錯誤並返回標準錯誤響應
-    return errorRes(res, "PayPal 訂單創建失敗", err.toString());
+    return errorRes("PayPal 訂單創建失敗", err.toString());
   }
 };
 
@@ -44,7 +43,7 @@ exports.paypalVerifyOrder = async (req, res) => {
 
   // 檢查必要的訂單標識信息
   if (!orderId || !paypalId) {
-    return errorRes(res, "缺少必要的訂單標識信息", 400);
+    return errorRes("缺少必要的訂單標識信息", 400);
   }
 
   try {
@@ -67,7 +66,7 @@ exports.paypalVerifyOrder = async (req, res) => {
       ]);
 
       if (paypalResults.affectedRows !== 1) {
-        return errorRes(res, "更新訂單狀態失敗", 500);
+        return errorRes("更新訂單狀態失敗", 500);
       }
 
       // 2. 調用 `updateStock` 函數來更新庫存
@@ -75,22 +74,22 @@ exports.paypalVerifyOrder = async (req, res) => {
 
       // 根據 `updateStock` 的返回值進行響應處理
       if (stockResult.status !== 200) {
-        return errorRes(res, stockResult.message, stockResult.status);
+        return errorRes(stockResult.message, stockResult.status);
       }
 
       // 3. 返回成功響應
-      return successRes(res, "訂單支付成功，訂單狀態及庫存已更新");
+      return successRes("訂單支付成功，訂單狀態及庫存已更新");
     } else if (!orderDetails) {
       // 捕獲訂單失敗
-      return errorRes(res, "驗證訂單失敗", 500);
+      return errorRes("驗證訂單失敗", 500);
     } else {
       // 支付未完成
-      return errorRes(res, "支付未完成", 400);
+      return errorRes("支付未完成", 400);
     }
   } catch (err) {
     console.error("PayPal 訂單捕獲失敗:", err);
 
     // 捕獲異常並返回錯誤響應
-    return errorRes(res, "訂單捕獲失敗", 500);
+    return errorRes("訂單捕獲失敗", 500);
   }
 };

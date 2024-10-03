@@ -1,6 +1,6 @@
 const db = require("../db/index");
 // 統一響應函數
-const { successRes, errorRes } = require("../utils/response_handler");
+const { successRes, errorRes } = require("../utils/response");
 
 // 取得所有商品（依 ID 降序排列）
 exports.getAllProduct = async (req, res) => {
@@ -8,14 +8,14 @@ exports.getAllProduct = async (req, res) => {
   try {
     const [results] = await db.query(sql);
     if (results.length === 0) {
-      return errorRes(res, "取得所有商品失敗", 404);
+      return errorRes("取得所有商品失敗", 404);
     }
     // 模擬延遲回應，方便前端測試 loading 動畫效果
     setTimeout(() => {
-      successRes(res, "取得所有商品成功", results);
+      successRes("取得所有商品成功", results);
     }, 1000);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -25,11 +25,11 @@ exports.getAllProductRand = async (req, res) => {
   try {
     const [results] = await db.query(sql);
     if (results.length === 0) {
-      return errorRes(res, "隨機取得所有商品失敗", 404);
+      return errorRes("隨機取得所有商品失敗", 404);
     }
-    return successRes(res, "隨機取得所有商品成功", results);
+    return successRes("隨機取得所有商品成功", results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -41,11 +41,11 @@ exports.getOneProduct = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.length !== 1) {
-      return errorRes(res, `無法取得 ID 為 ${id} 的商品`, 404);
+      return errorRes(`無法取得 ID 為 ${id} 的商品`, 404);
     }
-    return successRes(res, "取得單項商品成功", results[0]);
+    return successRes("取得單項商品成功", results[0]);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -55,11 +55,11 @@ exports.addNewProduct = async (req, res) => {
   try {
     const [results] = await db.query(sql, req.body);
     if (results.affectedRows !== 1) {
-      return errorRes(res, "新增商品失敗，請再試一次");
+      return errorRes("新增商品失敗，請再試一次");
     }
-    return successRes(res, "新增商品成功");
+    return successRes("新增商品成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -71,11 +71,11 @@ exports.updateProduct = async (req, res) => {
   try {
     const [results] = await db.query(sql, [req.body, id]);
     if (results.affectedRows !== 1) {
-      return errorRes(res, `無法更新 ID 為 ${id} 的商品`);
+      return errorRes(`無法更新 ID 為 ${id} 的商品`);
     }
-    return successRes(res, "更新商品成功");
+    return successRes("更新商品成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -87,11 +87,11 @@ exports.deleteProduct = async (req, res) => {
   try {
     const [results] = await db.query(sql, [id]);
     if (results.affectedRows !== 1) {
-      return errorRes(res, `無法刪除 ID 為 ${id} 的商品`);
+      return errorRes(`無法刪除 ID 為 ${id} 的商品`);
     }
-    return successRes(res, "刪除商品成功");
+    return successRes("刪除商品成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -117,10 +117,10 @@ exports.searchProduct = async (req, res) => {
   try {
     const [results] = await db.query(sql, params);
     if (results.length === 0) {
-      return successRes(res, "沒有匹配結果", []);
+      return successRes("沒有匹配結果", []);
     }
-    return successRes(res, `搜尋結果共 ${results.length} 筆`, results);
+    return successRes(`搜尋結果共 ${results.length} 筆`, results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };

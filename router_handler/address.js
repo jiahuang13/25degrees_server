@@ -1,5 +1,5 @@
 const db = require("../db/index");
-const { successRes, errorRes } = require("../utils/response_handler");
+const { successRes, errorRes } = require("../utils/response");
 
 // 取得所有地址
 exports.getAddressList = async (req, res) => {
@@ -7,11 +7,11 @@ exports.getAddressList = async (req, res) => {
   try {
     const [results] = await db.query(sql, [req.auth.id]);
     if (results.length === 0) {
-      return successRes(res, "目前沒有地址", []);
+      return successRes("目前沒有地址", []);
     }
-    return successRes(res, "取得所有地址成功", results);
+    return successRes("取得所有地址成功", results);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -21,11 +21,11 @@ exports.getAddressOne = async (req, res) => {
   try {
     const [results] = await db.query(sql, [req.params.id]);
     if (results.length !== 1) {
-      return errorRes(res, "取得地址失敗", 404);
+      return errorRes("取得地址失敗", 404);
     }
-    return successRes(res, "取得地址成功", results[0]);
+    return successRes("取得地址成功", results[0]);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -35,11 +35,11 @@ exports.getDefaultAddress = async (req, res) => {
   try {
     const [results] = await db.query(sql, [req.auth.id]);
     if (results.length === 0) {
-      return successRes(res, "目前沒有預設地址", []);
+      return successRes("目前沒有預設地址", []);
     }
-    return successRes(res, "取得預設地址成功", results[0]);
+    return successRes("取得預設地址成功", results[0]);
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -58,11 +58,11 @@ exports.updateAddress = async (req, res) => {
     const [updateResults] = await db.query(updateSql, [data, id]);
 
     if (updateResults.affectedRows !== 1) {
-      return errorRes(res, "更新地址失敗");
+      return errorRes("更新地址失敗");
     }
-    return successRes(res, "更新地址成功");
+    return successRes("更新地址成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -80,11 +80,11 @@ exports.addAddress = async (req, res) => {
     const [insertResults] = await db.query(insertSql, [data]);
 
     if (insertResults.affectedRows !== 1) {
-      return errorRes(res, "新增地址失敗");
+      return errorRes("新增地址失敗");
     }
-    return successRes(res, "新增地址成功");
+    return successRes("新增地址成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
 
@@ -102,10 +102,10 @@ exports.deleteAddress = async (req, res) => {
     const [updateResults] = await db.query(updateSql, [data, id]);
 
     if (updateResults.affectedRows !== 1) {
-      return errorRes(res, "更新地址失敗");
+      return errorRes("更新地址失敗");
     }
-    return successRes(res, "更新地址成功");
+    return successRes("更新地址成功");
   } catch (err) {
-    return errorRes(res, err.message);
+    return errorRes(err.message);
   }
 };
