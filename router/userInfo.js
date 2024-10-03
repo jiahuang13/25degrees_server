@@ -35,5 +35,4 @@ router.post(
   userInfoHandler.updateAvatar
 );
 
-
 module.exports = router;

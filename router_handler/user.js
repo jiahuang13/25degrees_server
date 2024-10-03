@@ -68,7 +68,7 @@ exports.register = async (req, res) => {
 };
 
 // -------------------- 驗證驗證碼 ---------------------------
-exports.verificationCode = async (req, res) => {
+exports.vCode = async (req, res) => {
   const { email, verificationCode } = req.body;
 
   try {

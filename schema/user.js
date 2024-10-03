@@ -41,7 +41,7 @@ exports.login_schema = {
 };
 
 // 驗證碼
-exports.verificationCode_schema = {
+exports.vCode_schema = {
   body: {
     email,
     verificationCode,

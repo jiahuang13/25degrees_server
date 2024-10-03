@@ -81,4 +81,3 @@ exports.updateAvatar = async (req, res) => {
     return errorRes(res, err.message);
   }
 };
-

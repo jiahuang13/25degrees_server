@@ -1,7 +1,7 @@
-// 引入數據庫模塊
 const db = require("../db/index");
 const { successRes, errorRes } = require("../utils/response_handler");
 
+// items(id, count, price), totalprice
 // 創建訂單
 exports.createOrder = async (req, res) => {
   const userId = req.auth.id;

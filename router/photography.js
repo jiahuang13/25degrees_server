@@ -1,11 +1,10 @@
 const express = require('express')
 const router = express.Router()
-
 const photographyHandler = require('../router_handler/photography')
 
-router.get('/album', photographyHandler.getAllAlbum)
-router.get('/album/:id', photographyHandler.getOneAlbum)
-router.get('/design', photographyHandler.getAllDesign)
+router.
+get('/api/album', photographyHandler.getAllAlbum)
+.get('/api/album/:id', photographyHandler.getOneAlbum)
+.get('/api/design', photographyHandler.getAllDesign)
 
-//將路由對象共享出去
 module.exports = router
