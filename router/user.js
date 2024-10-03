@@ -1,25 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const userHandler = require("../router_handler/user");
-const expressJoi = require("@escook/express-joi");
+const handler = require("../router_handler/user");
+const joi = require("@escook/express-joi");
 const {
-  register_schema,
-  login_schema,
-  update_userInfo_schema,
-  vCode_schema,
+  register,
+  login,
+  update_userInfo,
+  vCode,
+  email,
+  newPassword
 } = require("../schema/user");
 
 router
-  .post("/user/register", expressJoi(register_schema), userHandler.register) //註冊
-  .post("/user/vCode", expressJoi(vCode_schema), userHandler.vCode) //驗證碼
-  .post("/user/login", expressJoi(login_schema), userHandler.login) //登入
+  .post("/api/register", joi(register), handler.register) //註冊
+  .post("/api/v-code/register", joi(vCode), handler.vCodeRegister) //驗證碼（註冊）
+  .post("/api/v-code/forgot-password", joi(vCode), handler.vCodeForgotPwd) //驗證碼（忘記密碼）
+  .post("/api/login", joi(login), handler.login) //登入
+  .post("/api/forgot-password", joi(email), handler.forgotPassword) //忘記密碼
+  .post("/api/reset-password", joi(newPassword), handler.resetPassword) //重置密碼
 
-  .get("/user/auth", userHandler.getThisUser) // 取得此會員（req.auth）
+  .get("/user/auth", handler.getThisUser) // 取得此會員（req.auth）
 
-  .get("/admin/user/all", userHandler.getAllUser) //取得所有會員
-  .get("/admin/user/search", userHandler.searchUser) //搜尋會員
-  .get("/admin/user/:id", userHandler.getUserById) // 取得單個會員
-  .delete("/admin/user/:id", userHandler.deleteUser) //刪除會員
-  .patch("/admin/user", expressJoi(update_userInfo_schema), userHandler.updateUser); // 更新會員
+  .get("/admin/user/all", handler.getAllUser) //取得所有會員
+  .get("/admin/user/search", handler.searchUser) //搜尋會員
+  .get("/admin/user/:id", handler.getUserById) // 取得單個會員
+  .delete("/admin/user/:id", handler.deleteUser) //刪除會員
+  .patch("/admin/user", joi(update_userInfo), handler.updateUser); // 更新會員
 
 module.exports = router;

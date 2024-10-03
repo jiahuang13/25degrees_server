@@ -1,10 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const photographyHandler = require('../router_handler/photography')
+const handler = require('../router_handler/photography')
 
 router.
-get('/api/album', photographyHandler.getAllAlbum)
-.get('/api/album/:id', photographyHandler.getOneAlbum)
-.get('/api/design', photographyHandler.getAllDesign)
+get('/api/album', handler.getAllAlbum)
+.get('/api/album/:id', handler.getOneAlbum)
+.get('/api/design', handler.getAllDesign)
 
 module.exports = router

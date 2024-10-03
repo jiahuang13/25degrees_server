@@ -3,10 +3,9 @@ const config = require("../config");
 
 // 配置白名單
 const whitelist = [
-  { path: /^\/(api)(\/.*)?$/, method: "GET" }, // 只允許 GET 跳過
-  { path: /register/, method: "POST" },
-  { path: /login/, method: "POST" },
-  { path: /vCode/, method: "POST" },
+  { path: /^\/(api)(\/.*)?$/, method: "GET" },
+  { path: /^\/(api)(\/.*)?$/, method: "POST" },
+
 ];
 
 // 驗證用戶身份及權限 (token + role) 中間件，默認權限為 `0`
@@ -48,4 +47,3 @@ exports.verifyAccess = (requiredRole = 0) => {
     }
   };
 };
-

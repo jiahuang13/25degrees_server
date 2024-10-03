@@ -39,14 +39,12 @@ exports.register = async (req, res) => {
     }
 
     // 生成驗證碼
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    const vCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     // 儲存驗證碼與用戶資訊到 Redis
     await client.set(
       email,
-      JSON.stringify({ username, email, password, verificationCode }),
+      JSON.stringify({ username, email, password, vCode }),
       { EX: 300 }
     );
 
@@ -55,7 +53,7 @@ exports.register = async (req, res) => {
       from: "jiahuang0513@gmail.com",
       to: email,
       subject: "25 degrees 註冊驗證",
-      text: `您的驗證碼是：${verificationCode}`,
+      text: `您的驗證碼是：${vCode}`,
     };
 
     // 發送郵件
@@ -68,8 +66,8 @@ exports.register = async (req, res) => {
 };
 
 // -------------------- 驗證驗證碼 ---------------------------
-exports.vCode = async (req, res) => {
-  const { email, verificationCode } = req.body;
+exports.vCodeRegister = async (req, res) => {
+  const { email, vCode } = req.body;
 
   try {
     // 從 Redis 取得驗證碼及用戶資訊
@@ -78,14 +76,10 @@ exports.vCode = async (req, res) => {
       return errorRes(res, "驗證碼已過期或無效，請重新註冊");
     }
 
-    const {
-      username,
-      password,
-      verificationCode: savedCode,
-    } = JSON.parse(jsonData);
+    const { username, password, vCode: savedCode } = JSON.parse(jsonData);
 
     // 驗證驗證碼是否正確
-    if (savedCode !== verificationCode) {
+    if (savedCode !== vCode) {
       return errorRes(res, "驗證碼不正確", 400);
     }
 
@@ -130,6 +124,95 @@ exports.login = async (req, res) => {
       expiresIn: config.expiresIn,
     });
     return successRes(res, "登入成功", { token: tokenStr });
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
+};
+
+// -------------------- 請求重置密碼 ---------------------------
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // 檢查用戶是否存在
+    const [results] = await db.query("SELECT * FROM user WHERE email = ?", [
+      email,
+    ]);
+    if (results.length === 0) {
+      return errorRes(res, "該信箱未註冊", 404);
+    }
+
+    // 生成重置驗證碼
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 儲存驗證碼到 Redis，有效期 5 分鐘
+    await client.set(email, resetCode, { EX: 3000 });
+
+    // 發送郵件通知
+    const mailOptions = {
+      from: "jiahuang0513@gmail.com",
+      to: email,
+      subject: "25 degrees 密碼重置",
+      text: `您的密碼重置驗證碼是：${resetCode}，請在 5 分鐘內使用`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return successRes(res, "驗證碼已發送到您的信箱");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
+};
+
+// -------------------- 驗證重置驗證碼 ---------------------------
+exports.vCodeForgotPwd = async (req, res) => {
+  const { email, vCode } = req.body;
+
+  try {
+    // 取得 Redis 中儲存的重置驗證碼
+    const savedCode = await client.get(email);
+
+    if (!savedCode) {
+      return errorRes(res, "驗證碼已過期或無效，請重新請求重置密碼", 400);
+    }
+
+    // 驗證碼是否正確
+    if (savedCode !== vCode) {
+      return errorRes(res, "驗證碼不正確", 400);
+    }
+
+    // 驗證通過後，設置 Redis 中的標記來允許重置密碼
+    await client.set(`reset_allowed_${email}`, 1, { EX: 3000 }); // 允許 5 分鐘內重設密碼
+
+    return successRes(res, "驗證碼正確，請設置新密碼");
+  } catch (err) {
+    return errorRes(res, err.message);
+  }
+};
+
+// 設置新密碼
+exports.resetPassword = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // 檢查是否已通過驗證
+    const resetAllowed = await client.get(`reset_allowed_${email}`);
+    if (!resetAllowed) {
+      return errorRes(res, "無效或已過期的請求，請重新進行驗證", 400);
+    }
+
+    // 將新密碼加密後更新到數據庫
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const sql = "UPDATE user SET password = ? WHERE email = ?";
+    const [results] = await db.query(sql, [hashedPassword, email]);
+
+    if (results.affectedRows !== 1) {
+      return errorRes(res, "重置密碼失敗，請稍後再試");
+    }
+
+    // 重設密碼成功後刪除 Redis 中的標記
+    await client.del(`reset_allowed_${email}`);
+
+    return successRes(res, "密碼重設成功，請重新登入");
   } catch (err) {
     return errorRes(res, err.message);
   }

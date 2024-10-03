@@ -10,7 +10,7 @@ const id = joi.number().integer().min(1).required();
 const nickname = joi.string();
 const email = joi.string().email().required();
 const avatar = joi.string().dataUri();
-const verificationCode = joi.string().length(6).pattern(/^\d+$/).required();
+const vCode = joi.string().length(6).pattern(/^\d+$/).required();
 // const user_id = joi.number().integer().min(1).required();
 const phone = joi
   .string()
@@ -24,7 +24,7 @@ const address_detail = joi.string().min(2).max(255).required();
 const role = joi.number().integer().min(0).required();
 
 //驗證規則對象：註冊表單
-exports.register_schema = {
+exports.register = {
   body: {
     username,
     password,
@@ -33,7 +33,7 @@ exports.register_schema = {
 };
 
 // 登入表單
-exports.login_schema = {
+exports.login = {
   body: {
     username,
     password,
@@ -41,15 +41,29 @@ exports.login_schema = {
 };
 
 // 驗證碼
-exports.vCode_schema = {
+exports.vCode = {
   body: {
     email,
-    verificationCode,
+    vCode,
+  },
+};
+
+// 信箱
+exports.email = {
+  body: {
+    email,
+  },
+};
+
+exports.newPassword = {
+  body: {
+    email,
+    password,
   },
 };
 
 //驗證規則對象：更新用戶信息
-exports.update_userInfo_schema = {
+exports.update_userInfo = {
   body: {
     id,
     username,
@@ -60,7 +74,7 @@ exports.update_userInfo_schema = {
 };
 
 //驗證規則對象：重置密碼
-exports.update_pwd_schema = {
+exports.update_pwd = {
   body: {
     oldPwd: password,
     //
@@ -69,14 +83,14 @@ exports.update_pwd_schema = {
 };
 
 //驗證規則對象：更新頭像
-exports.update_avatar_schema = {
+exports.update_avatar = {
   body: {
     avatar,
   },
 };
 
 // 新增地址
-exports.address_schema = {
+exports.address = {
   body: {
     // user_id,
     recipient_name,
